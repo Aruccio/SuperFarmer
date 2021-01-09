@@ -13,7 +13,7 @@ import androidx.annotation.RequiresApi
 class MainActivity : AppCompatActivity() {
 
     lateinit var aparatButton: Button
-    lateinit var galleryButton: Button
+    lateinit var awariaButton: Button
     lateinit var imageView: ImageView
     private val REQUEST_CODE = 42
 
@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         aparatButton = findViewById(R.id.aparatButton)
+        awariaButton = findViewById(R.id.awariaButton)
         imageView = findViewById(R.id.imageView)
         aparatButton.setOnClickListener()
         {
@@ -32,14 +33,22 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+
+        awariaButton.setOnClickListener()
+        {
+            val intent = Intent(this, Awaria::class.java)
+            startActivity(intent)
+
+        }
     }
         @RequiresApi(Build.VERSION_CODES.Q)
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
             if(requestCode==REQUEST_CODE && resultCode== Activity.RESULT_OK)
             {
                 val takenImage = data?.extras?.get("data") as Bitmap
-                var resized = ImageManagement.ImageToCyan(takenImage)
-                imageView.setImageBitmap(resized)
+                var cyaned = ImageManagement.ImageToCyan(takenImage)
+                var cutted = ImageManagement.FindOneSector(cyaned)
+                imageView.setImageBitmap(cutted)
 
             }
             else
