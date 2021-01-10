@@ -52,7 +52,7 @@ object ImageManagement
     //znajduje kostke typu "od pierwszego cyan do ostatniego cyan"
     @RequiresApi(Build.VERSION_CODES.Q)
     fun FindOneSector(image: Bitmap) :Bitmap {
-        var newimage = Rotate(image)
+        var newimage = Bitmap.createBitmap(image,0,0,image.width,image.height)
         var h = newimage.height-1
         var w = newimage.width-1
         var counterx = 0 //dlugosc w x
@@ -96,11 +96,10 @@ object ImageManagement
         return newimage
     }
 
-    fun Rotate(btm:Bitmap):Bitmap {
-        val matrix = Matrix()
-        matrix.postRotate(90F)
-        return Bitmap.createBitmap(btm, 0, 0, btm.height, btm.width, matrix, false)
-    }
+//    fun Rotate(btm:Bitmap):Bitmap { //       val matrix = Matrix()
+//        matrix.postRotate(90F)
+//        return Bitmap.createBitmap(btm, 0, 0, btm.height, btm.width, matrix, false)
+//    }
 
 
 
