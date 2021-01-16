@@ -47,8 +47,9 @@ class MainActivity : AppCompatActivity() {
             {
                 val takenImage = data?.extras?.get("data") as Bitmap
                 var cyaned = ImageManagement.ImageToCyan(takenImage)
-                var cutted = ImageManagement.FindOneSector(cyaned)
-                imageView.setImageBitmap(cutted)
+           //     var cutted = ImageManagement.FindOneSector(cyaned)
+                imageView.setImageBitmap(cyaned)
+                ImageManagement.ReadImageOpenCV()
 
             }
             else

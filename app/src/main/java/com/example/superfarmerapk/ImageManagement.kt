@@ -1,11 +1,17 @@
 package com.example.superfarmerapk
 
-import android.R.attr.angle
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.Matrix
 import android.os.Build
 import androidx.annotation.RequiresApi
+import org.opencv.android.OpenCVLoader
+import org.opencv.core.Core
+import org.opencv.core.Mat
+import org.opencv.core.Point
+import org.opencv.core.Scalar
+import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
+import java.security.AccessController.getContext
 
 
 object ImageManagement
@@ -24,9 +30,10 @@ object ImageManagement
     //kolejnych zwierzat (bialy -> cyan)
     @RequiresApi(Build.VERSION_CODES.Q)
     fun ImageToCyan(image: Bitmap) :Bitmap {
-        var h = image.height-1
-        var w = image.width-1
+        var h = image.height-2
+        var w = image.width-2
         var newimage = Bitmap.createBitmap(image, 0, 0, w+1, h+1)
+        var found= false
         for (x in 0..w)
         {
             for (y in 0..h)
@@ -40,67 +47,54 @@ object ImageManagement
                 {
                     newimage.setPixel(x,y, Color.rgb(0,255,255))
                 }
-                //wyciecie zielonego, bo psy
-            //    if(greenValue<140 && redValue<30 && blueValue<30)
-           //         newimage.setPixel(x,y, Color.rgb(0,255,255))
             }
         }
+
+        for(x in 1..w)
+            for(y in 1..h)
+            {
+                var p = image.getPixel(x,y)
+                var pp = image.getPixel(x-1,y-1)
+                var redValue = Color.red(p);
+                var blueValue = Color.blue(p);
+                var greenValue = Color.green(p);
+                var redValue2 = Color.red(pp);
+                var blueValue2 = Color.blue(pp);
+                var greenValue2 = Color.green(pp);
+                //jesli nie zostal znaleziony pierwszy cyanowy pixel
+                if(!found)
+                {
+                    //jesli pixel jest cyanowy, a jeden wczesniej nie jest (x-1,y-1)
+                if(greenValue>150 && blueValue>150
+                    && !(greenValue2>150 && blueValue2>150))
+                    {
+                        println("------------------tuuuu jestem!!!----------------------")
+                        newimage.setPixel(x,x, Color.rgb(255,40,40))
+                        newimage.setPixel(x+1,x, Color.rgb(255,40,40))
+                        newimage.setPixel(x,x+1, Color.rgb(255,40,40))
+                        newimage.setPixel(x+1,x+1, Color.rgb(255,40,40))
+                        found=true
+                    }
+                }
+                //jesli jest znaleziony pierwszy cyanowy pixel
+          /*      if(found)
+                {
+                    var ppp = image.getPixel(x+1,y+1)
+                    var redValue3 = Color.red(ppp);
+                    var blueValue3 = Color.blue(ppp);
+                    var greenValue3 = Color.green(ppp);
+                    if(redValue>150 && greenValue>150 && blueValue>150
+                        && !(redValue3>150 && greenValue3>150 && blueValue3>150)) {
+                        newimage.setPixel(x, x, Color.rgb(255, 40, 40))
+                    }
+                }*/
+            }
+
         return newimage
     }
 
 
     //znajduje kostke typu "od pierwszego cyan do ostatniego cyan"
-    @RequiresApi(Build.VERSION_CODES.Q)
-    fun FindOneSector(image: Bitmap) :Bitmap {
-        var newimage = Bitmap.createBitmap(image,0,0,image.width,image.height)
-        var h = newimage.height-1
-        var w = newimage.width-1
-        var counterx = 0 //dlugosc w x
-        var countery = 0 //dlugosc w y
-        var startx = 0 // poczatek kostki w x
-        var starty = 0 //poczatek kostki w y
-        var endx = w //koniec w x
-        var endy = h //koniec w y
-
-        var found = false
-        for (x in w..0)
-      //      for (y in 0..h)
-             {
-                if (!found) {
-                    var p = newimage.getPixel(x,x)
-                    var redValue = Color.red(p);
-                    var blueValue = Color.blue(p);
-                    var greenValue = Color.green(p);
-                    newimage.setPixel(x,x, Color.rgb(255, 30, 30))
-                    //jesli pixel jest chociaz troche w strone cyanowego
-                    if (greenValue > 240 && blueValue > 240) {
-                        if ( x == h || x== w) break
-                        startx = x
-                        starty = x
-                        newimage.setPixel(startx, starty, Color.rgb(255, 30, 30))
-                        found=true
-                    }
-                }
-            }
-        /*
-        for(x in 0..w) {
-            if(x==w) break
-            println(x.toString()+"-----"+w.toString())
-            newimage.setPixel(x, starty, Color.rgb(255, 0, 0))
-        }
-        */
-     //   counterx = 5*countery /4
-     //   endx = startx+counterx
-     //   endy = starty+countery
-        // newimage.setPixel(startx-1,starty,Color.rgb(255,0,0) )
-        return newimage
-    }
-
-//    fun Rotate(btm:Bitmap):Bitmap { //       val matrix = Matrix()
-//        matrix.postRotate(90F)
-//        return Bitmap.createBitmap(btm, 0, 0, btm.height, btm.width, matrix, false)
-//    }
-
 
 
     fun CutToPieces(image:Bitmap, w:Int, h:Int)
@@ -123,5 +117,38 @@ object ImageManagement
         //     }
     }
 
+
+    fun ReadImageOpenCV()
+    {
+
+        val srcpath =
+            "D:\\STUDIA\\0.INF\\I5. IO\\Nowy folder\\SuperFarmer\\zdjecia\\"
+        val tempath =
+            "D:\\STUDIA\\0.INF\\I5. IO\\Nowy folder\\SuperFarmer\\templatki\\"
+
+        var source = Imgcodecs.imread(srcpath + "zdjecie.jpg")
+        var template = Imgcodecs.imread(tempath + "krolik.jpg")
+
+        val outputImage = Mat()
+        val machMethod = Imgproc.TM_CCOEFF
+        //Template matching method
+        //Template matching method
+        Imgproc.matchTemplate(source, template, outputImage, machMethod)
+
+
+        val mmr = Core.minMaxLoc(outputImage)
+        val matchLoc: Point = mmr.maxLoc
+        //Draw rectangle on result image
+        //Draw rectangle on result image
+        Imgproc.rectangle(
+            source, matchLoc, Point(
+                matchLoc.x + template.cols(),
+                matchLoc.y + template.rows()
+            ), Scalar(255.0, 255.0, 255.0)
+        )
+
+        Imgcodecs.imwrite(srcpath.toString() + "sonuc.jpg", source)
+        println("Complated.")
+    }
 
 }
